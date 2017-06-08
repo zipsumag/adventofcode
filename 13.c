@@ -74,6 +74,33 @@ struct path_item* path_pop(void)
   return history;
 }
 
+void path_backup(struct path_item** dst)
+{
+  struct path_item* p = *dst, *q, **r;
+  while (p) {
+    q = p;
+    p = p->previous;
+    free(q->pos);
+    free(q); 
+  }
+  p = history;
+  *dst = (struct path_item*)malloc(sizeof(struct path_item));
+  (*dst)->pos = (struct mazepos*)malloc(sizeof(struct mazepos));
+  (*dst)->pos->x = p->pos->x;
+  (*dst)->pos->y = p->pos->y;
+  p = p->previous;
+  r = &(*dst)->previous;
+  while (p) {
+    *r = (struct path_item*)malloc(sizeof(struct path_item));
+    (*r)->pos = (struct mazepos*)malloc(sizeof(struct mazepos));
+    (*r)->pos->x = p->pos->x;
+    (*r)->pos->y = p->pos->y;
+    r = &(*r)->previous;
+    p = p->previous;
+  }
+  *r = NULL;
+}
+
 void next_dir(struct mazepos* pos, int i)
 {
   switch (i) {
@@ -123,7 +150,7 @@ void traverse(int* least_steps)
     /* TODO: how should alternative solutions be handled? */
     /*if (path_len < *least_steps) */
     *least_steps = path_len;
-    /*print_history();*/
+    path_backup(&backup);
     return;
   }
   if (path_len >= *least_steps) return;
@@ -149,6 +176,10 @@ int main(int argc, char** argv)
   int least_steps = 100000;
   history = path_push(start_pos);
   traverse(&least_steps);
+  history = backup;
+  print_history();
+  write_history();
+  while (history) path_pop();
   printf("Shortest path is %d steps\n", least_steps);
   return 0;
 }
