@@ -117,29 +117,26 @@ void traverse(int* least_steps)
   } 
 }
  
-/*void traverse_n(int n)*/
-/*{*/
-  /*int i;*/
-  /*struct path_item* swp;*/
-  /*struct mazepos pos;*/
-  /*if (path_len == n) {*/
-    /*printf(".");*/
-    /*return;*/
-  /*}*/
-  /*for (i = 0, pos = *history->pos; i < 4; ++i, pos = *history->pos) {*/
-    /*next_dir(&pos, i);*/
-    /*if (pos.x >= 0 && pos.y >= 0*/
-        /*&& !is_wall(&pos)*/
-        /*&& !is_visited(pos)) {*/
-      /*if (!is_visited(pos)) {*/
-        /*dllist_push_back(backup, alloc_mazepos(pos), sizeof(pos));*/
-      /*}*/
-      /*dllist_push_back(&history, alloc_mazepos(pos), sizeof(pos));*/
-      /*traverse_n(n);*/
-      /*dllist_pop_back(&history);*/
-    /*}*/
-  /*}*/
-/*}*/
+void traverse_n(int max_steps)
+{
+  int i;
+  struct mazepos pos;
+  if (history.length == max_steps + 1) return;
+  pos = *((struct mazepos*)history.end->data);
+  for (i = 0; i < 4; ++i, pos = *((struct mazepos*)history.end->data)) {
+    next_dir(&pos, i);
+    if (pos.x >= 0 && pos.y >= 0
+        && !is_wall(&pos)
+        && !dllist_contains(&history, &pos, sizeof(pos))) {
+      if (!dllist_contains(backup, &pos, sizeof(pos))) {
+        dllist_push_back(backup, alloc_mazepos(pos), sizeof(pos));
+      }
+      dllist_push_back(&history, alloc_mazepos(pos), sizeof(pos));
+      traverse_n(max_steps);
+      dllist_pop_back(&history);
+    }
+  }
+}
 
 int main(int argc, char** argv)
 {
@@ -157,13 +154,13 @@ int main(int argc, char** argv)
   printf("Shortest path is %d steps\n", least_steps);
 
   /* part 2                                                                   */
-  /*backup = dllist_copy(&history, sizeof(struct mazepos));*/
-  /*traverse_n(max_steps);*/
-  /*print_history(backup);*/
-  /*dllist_free(backup);*/
-  /*free(backup);*/
-  /*printf("Number of blocks that can be visited within %d steps: %d\n", */
-         /*max_steps, n_reachable);*/
+  backup = dllist_copy(&history, sizeof(struct mazepos));
+  traverse_n(max_steps);
+  print_history(backup);
+  printf("Number of blocks that can be visited within %d steps: %d\n",
+         max_steps, backup->length);
+  dllist_free(backup);
+  free(backup);
   return 0;
 }
 
