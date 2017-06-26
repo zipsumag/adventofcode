@@ -65,7 +65,7 @@ void traverse(struct coords pos, int depth, char* pass, int* path_len, char** pa
       || pos.y < 0) {
     return;
   } else if (pos.x == target.x && pos.y == target.y) {
-    if (*path_len > depth && part == 1) return;
+    if (*path_len > depth && part == 2) return;
     *path_len = depth;
     free(*path); 
     *path = malloc(sizeof(char) * (strlen(pass) + 1));
@@ -84,12 +84,12 @@ void traverse(struct coords pos, int depth, char* pass, int* path_len, char** pa
 
 int main(int argc, char** argv)
 {
-  int path_len = 0, part = 2;
+  int part = (argc > 1 ? (atoi(argv[1]) > 1 ? 2 : 1) : 1);
+  int path_len = (part == 1 ? 10000 : 0);
   char pass[] = "pslxynzg";
-  /*char pass[] = "ihgpwlah"; [> test case <]*/
   struct coords start_pos = { 0, 0 };
   char* path;
   traverse(start_pos, 0, pass, &path_len, &path, part);
-  printf("shortest path: %s\n", path);
+  printf("shortest path (length): %s (%d)\n", path, path_len);
   return 0;
 }
