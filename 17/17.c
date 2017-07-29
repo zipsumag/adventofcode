@@ -52,18 +52,25 @@ void step(struct coords* pos, int dir, char* pass, char* md5string) {
   } 
 }
 
-void traverse(struct coords pos, int depth, char* pass, int* path_len, char** path)
+void traverse(struct coords pos, 
+              int           depth, 
+              char*         pass, 
+              int*          path_len, 
+              char**        path, 
+              int           part)
 {
   int i;
   struct coords next_pos;
   char md5string[33], *new_pass;
-  if (pos.x > target.x 
+  if (pos.x > target.x
       || pos.x < 0 
       || pos.y > target.y 
-      || pos.y < 0
-      || depth > *path_len) { 
+      || pos.y < 0) {
+    return;
+  } else if (part == 0 && *path_len < depth) {
     return;
   } else if (pos.x == target.x && pos.y == target.y) {
+    if (*path_len > depth && part == 1) return;
     *path_len = depth;
     free(*path); 
     *path = malloc(sizeof(char) * (strlen(pass) + 1));
@@ -71,11 +78,10 @@ void traverse(struct coords pos, int depth, char* pass, int* path_len, char** pa
     return;
   }
   new_pass = copy_pass(pass);
-  md5sum_tostring(pass, md5string); 
+  md5sum_tostring((unsigned char*)pass, (unsigned char*)md5string); 
   for (i = 0, next_pos = pos; i < 4; ++i, next_pos = pos) {
     step(&next_pos, i, new_pass, md5string); 
-    /*printf("(%d, %d), %s\n", next_pos.x, next_pos.y, md5string);*/
-    traverse(next_pos, depth + 1, new_pass, path_len, path);
+    traverse(next_pos, depth + 1, new_pass, path_len, path, part);
     new_pass[strlen(pass)] = 0;
   }
   free(new_pass); 
@@ -83,12 +89,16 @@ void traverse(struct coords pos, int depth, char* pass, int* path_len, char** pa
 
 int main(int argc, char** argv)
 {
-  int path_len = 50000;
+  int path_len, part, pass_len;
   char pass[] = "pslxynzg";
-  /*char pass[] = "ihgpwlah"; [> test case <]*/
   struct coords start_pos = { 0, 0 };
   char* path;
-  traverse(start_pos, 0, pass, &path_len, &path);
-  printf("shortest path: %s\n", path);
+  part = (argc > 1 ? (atoi(argv[1]) > 1 ? 1 : 0) : 0);
+  path_len = (part > 0 ? 0 : 50000);
+  pass_len = strlen(pass);
+  traverse(start_pos, 0, pass, &path_len, &path, part);
+  printf((part ? "longest path length: %d\n" : "shortest path: %s\n"), 
+         (part ? strlen(&path[pass_len]) : &path[pass_len]));
+  free(path);
   return 0;
 }
